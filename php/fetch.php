@@ -2,6 +2,10 @@
 
 require_once '../vendor/autoload.php';
 
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Sheets\ValueRange;
+
 session_start();
 
 if(isset($_POST['r'])){
@@ -30,21 +34,42 @@ if(isset($_POST['r'])){
             $service = new Google_Service_Sheets($client);
 
             // Make request to Google Sheets API
-            $spreadsheetId = '1uikrfBL2YPM5AWtf7yFSjjVZM78FmoLnaydJP_jDnVU';
+            $spreadsheetId = '1ZXGgG5PZyhFZoTzwB5teMVJ1mFf82YxPbnHggC6iVyA';
             $range = 'Sheet1';
             
             
-            $response = $service->spreadsheets_values->get($spreadsheetId, $range);
-            $values = $response->getValues();
+            // $response = $service->spreadsheets_values->get($spreadsheetId, $range);
+            // $values = $response->getValues();
 
-            if (empty($values)) {
-                print "No data found.\n";
-            } else {
-                print "Cell values:\n";
-                foreach ($values as $row) {
-                    print_r($row);
-                }
+            // if (empty($values)) {
+            //     print "No data found.\n";
+            // } else {
+            //     print "Cell values:\n";
+            //     foreach ($values as $row) {
+            //         print_r($row);
+            //     }
+            // }
+
+            try {
+                $values = [['a1', 'a2', 'a3']]; //add the values to be appended
+                //execute the request
+                $body = new Google_Service_Sheets_ValueRange([
+                    'values' => $values
+                ]);
+                $params = [
+                    'valueInputOption' => 'RAW'
+                ];
+                $result = $service->spreadsheets_values->append($spreadsheetId, $range, $body, $params);
+                printf("%d cells appended.", $result->getUpdates()->getUpdatedCells());
+                return $result;
+            } catch (Exception $e) {
+                // TODO(developer) - handle error appropriately
+                echo 'Message: ' . $e->getMessage();
             }
+
+            
+
+
         } else {
             //If the access token is not available, redirect the user to the OAuth 2.0 consent screen
             $authUrl = $client->createAuthUrl();
